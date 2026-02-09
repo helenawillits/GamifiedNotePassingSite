@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Zap, Sparkles } from "lucide-react"
 import Link from "next/link"
-import { createDeck } from "@/app/actions"
+import { buildDeckFromFormData, saveCustomDeck } from "@/lib/create-deck-client"
 
 const emojiOptions = [
   { key: "fire", label: "\u{1F525}" },
@@ -45,12 +45,13 @@ export function DeckCreator() {
     formData.set("emoji", emoji)
     formData.set("color", color)
 
-    const result = await createDeck(formData)
+    const result = buildDeckFromFormData(formData)
     if (result.error) {
       setError(result.error)
       setIsSubmitting(false)
-    } else if (result.success && result.id) {
-      router.push(`/play/${result.id}`)
+    } else if (result.deck) {
+      saveCustomDeck(result.deck)
+      router.push("/play/custom")
     }
   }
 

@@ -1,0 +1,6 @@
+1:"$Sreact.fragment"
+2:I[1133,["/_next/static/chunks/ad28cb5ed0993437.js","/_next/static/chunks/584031c4df757a1c.js"],"CardViewer"]
+3:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/d2be314c3ece3fbe.js"],"OutletBoundary"]
+4:"$Sreact.suspense"
+0:{"buildId":"0rj5OmEHTqWU4T1twM6z8","rsc":["$","$1","c",{"children":[["$","$L2",null,{"deck":{"id":"stoic-wisdom","title":"7 Stoic Principles That Will Change Your Life","description":"Ancient wisdom that still hits hard today.","emoji":"brain","color":"purple","cards":["Focus only on what you can control. Everything else is noise.","The obstacle is the way. Every challenge is an opportunity to grow.","Memento mori. Remember you will die. So stop wasting time.","Amor fati. Love your fate. Even the hard parts made you who you are.","You are not disturbed by things, but by your opinion of things.","Wealth is not about having a lot. It is about needing very little.","The best revenge is not to be like your enemy."],"createdAt":"2026-02-08"}}],[["$","script","script-0",{"src":"/_next/static/chunks/ad28cb5ed0993437.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/584031c4df757a1c.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"loading":null,"isPartial":false}
+5:null
