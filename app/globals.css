@@ -127,3 +127,95 @@ body {
 .animate-confetti {
   animation: confetti-fall 2s ease-in forwards;
 }
+
+/* Scanline overlay */
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Flicker on text */
+@keyframes text-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.6; }
+  94% { opacity: 1; }
+  96% { opacity: 0.8; }
+  97% { opacity: 1; }
+}
+
+@keyframes typing-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes boot-in {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes hud-border-scan {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+.animate-text-flicker {
+  animation: text-flicker 4s ease-in-out infinite;
+}
+
+.animate-typing-blink {
+  animation: typing-blink 1s step-end infinite;
+}
+
+.animate-boot-in {
+  animation: boot-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hud-border {
+  position: relative;
+}
+
+.hud-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    hsl(187 100% 50% / 0),
+    hsl(187 100% 50% / 0.5),
+    hsl(187 100% 50% / 0)
+  );
+  background-size: 200% 100%;
+  animation: hud-border-scan 3s linear infinite;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Grid background pattern */
+.grid-bg {
+  background-image:
+    linear-gradient(hsl(187 100% 50% / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(187 100% 50% / 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
