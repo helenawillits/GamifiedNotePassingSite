@@ -43,7 +43,7 @@ function buildDots(): Dot[] {
     }
   }
   const shuffled = [...open].sort(() => Math.random() - 0.5)
-  const cherrySet = new Set(shuffled.slice(0, 3).map((p) => `${p.x},${p.y}`))
+  const cherrySet = new Set(shuffled.slice(0, 5).map((p) => `${p.x},${p.y}`))
 
   return open.map((p) => ({
     x: p.x,
@@ -83,6 +83,7 @@ export function PacmanChomp({ onComplete, color }: PacmanChompProps) {
   const [dir, setDir] = useState<Dir>("right")
   const [dots, setDots] = useState<Dot[]>(() => buildDots())
   const [eaten, setEaten] = useState(0)
+  const [cherriesEaten, setCherriesEaten] = useState(0)
 
   const dirRef = useRef<Dir>("right")
   const queueRef = useRef<Dir | null>(null)
@@ -90,7 +91,9 @@ export function PacmanChomp({ onComplete, color }: PacmanChompProps) {
   const phaseRef = useRef<Phase>("ready")
   const dotsRef = useRef<Dot[]>(dots)
   const eatenRef = useRef(0)
+  const cherriesEatenRef = useRef(0)
   const totalDots = dots.length
+  const totalCherries = dots.filter((d) => d.isCherry).length
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   phaseRef.current = phase
@@ -101,11 +104,13 @@ export function PacmanChomp({ onComplete, color }: PacmanChompProps) {
     const newDots = buildDots()
     dotsRef.current = newDots
     eatenRef.current = 0
+    cherriesEatenRef.current = 0
     posRef.current = { x: 1, y: 1 }
     dirRef.current = "right"
     queueRef.current = null
     setDots(newDots)
     setEaten(0)
+    setCherriesEaten(0)
     setPacPos({ x: 1, y: 1 })
     setDir("right")
     setMouth(true)
@@ -143,13 +148,20 @@ export function PacmanChomp({ onComplete, color }: PacmanChompProps) {
       // eat dot
       const di = dotsRef.current.findIndex((d) => d.x === next.x && d.y === next.y && !d.eaten)
       if (di >= 0) {
+        const eatenDot = dotsRef.current[di]
         const updated = dotsRef.current.map((d, i) => (i === di ? { ...d, eaten: true } : d))
         dotsRef.current = updated
         setDots(updated)
         eatenRef.current++
         setEaten(eatenRef.current)
 
-        if (eatenRef.current >= totalDots) {
+        if (eatenDot.isCherry) {
+          cherriesEatenRef.current++
+          setCherriesEaten(cherriesEatenRef.current)
+        }
+
+        // Win when all cherries are eaten
+        if (cherriesEatenRef.current >= totalCherries) {
           setPhase("won")
           setTimeout(onComplete, 800)
         }
@@ -221,11 +233,12 @@ export function PacmanChomp({ onComplete, color }: PacmanChompProps) {
   return (
     <div className="flex flex-col items-center gap-4">
       <p className="animate-text-flicker font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        {"[CONSUME_ALL_DATA]"}
+        {"[EAT_ALL_CHERRIES]"}
       </p>
 
-      <div className="font-mono text-[10px] text-muted-foreground">
-        <span>{`${eaten}/${totalDots} CONSUMED`}</span>
+      <div className="flex items-center gap-4 font-mono text-[10px] text-muted-foreground">
+        <span>{`CHERRIES: ${cherriesEaten}/${totalCherries}`}</span>
+        <span>{`DOTS: ${eaten}/${totalDots}`}</span>
       </div>
 
       {/* Game board */}

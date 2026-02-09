@@ -52,7 +52,12 @@ export function CardViewer({ deck }: { deck: CardDeck }) {
   const isFinished = currentIndex >= totalCards
   const isIntro = currentIndex === -1
 
-  const gameAssignments = useMemo(() => assignGames(totalCards, deck.id), [totalCards, deck.id])
+  const gameAssignments = useMemo(() => {
+    const games = assignGames(totalCards, deck.id)
+    // Always start the first card with the dino runner
+    games[0] = "dino"
+    return games
+  }, [totalCards, deck.id])
 
   const startNextCard = useCallback(() => {
     setCurrentIndex((prev) => {
