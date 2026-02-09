@@ -11,5 +11,9 @@ If this site was a trope, it would be enemies to lovers.
 
 Made with [v0](v0.app).
 
+### Build and Run
+Build: `npm run build`
+
+Preview: `npm run dev`
 ### Author
 Helena Willits
