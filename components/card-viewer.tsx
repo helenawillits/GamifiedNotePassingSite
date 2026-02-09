@@ -22,7 +22,6 @@ function seededRandom(seed: number) {
 }
 
 function assignGames(totalCards: number, deckId: string): GameType[] {
-  const games: GameType[] = []
   const gameTypes: GameType[] = ["asteroid", "ice", "word", "dino", "blocks", "pacman"]
   // Use deck id hash as seed for consistent but varied assignment
   let seed = 0
@@ -30,16 +29,38 @@ function assignGames(totalCards: number, deckId: string): GameType[] {
     seed += deckId.charCodeAt(i)
   }
 
+  const games: GameType[] = []
+
+  // Step 1: guarantee at least one of each game type
+  // Shuffle game types with seeded random, then place them in the first N slots
+  const shuffled = [...gameTypes]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(seededRandom(seed + i * 17) * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
   for (let i = 0; i < totalCards; i++) {
-    const r = seededRandom(seed + i * 7)
-    // ~85% chance of a game, ~15% no game (just reveal card)
-    if (r < 0.85) {
-      const gameIndex = Math.floor(seededRandom(seed + i * 13 + 3) * gameTypes.length)
-      games.push(gameTypes[gameIndex])
+    if (i < shuffled.length) {
+      // Guarantee each game type appears once
+      games.push(shuffled[i])
     } else {
-      games.push("none")
+      const r = seededRandom(seed + i * 7)
+      // ~85% chance of a game, ~15% no game (just reveal)
+      if (r < 0.85) {
+        const gameIndex = Math.floor(seededRandom(seed + i * 13 + 3) * gameTypes.length)
+        games.push(gameTypes[gameIndex])
+      } else {
+        games.push("none")
+      }
     }
   }
+
+  // Step 2: if deck has fewer cards than game types, we already placed as many as fit
+  // Step 3: shuffle the full array so guaranteed games aren't always first
+  for (let i = games.length - 1; i > 0; i--) {
+    const j = Math.floor(seededRandom(seed + i * 31 + 7) * (i + 1))
+    ;[games[i], games[j]] = [games[j], games[i]]
+  }
+
   return games
 }
 
@@ -52,12 +73,7 @@ export function CardViewer({ deck }: { deck: CardDeck }) {
   const isFinished = currentIndex >= totalCards
   const isIntro = currentIndex === -1
 
-  const gameAssignments = useMemo(() => {
-    const games = assignGames(totalCards, deck.id)
-    // Always start the first card with the dino runner
-    games[0] = "dino"
-    return games
-  }, [totalCards, deck.id])
+  const gameAssignments = useMemo(() => assignGames(totalCards, deck.id), [totalCards, deck.id])
 
   const startNextCard = useCallback(() => {
     setCurrentIndex((prev) => {
