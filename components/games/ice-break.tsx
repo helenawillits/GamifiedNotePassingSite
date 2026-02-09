@@ -27,9 +27,10 @@ interface IceBreakProps {
   cardText: string
 }
 
-const HITS_NEEDED = 7
+const hitsNeeded = 6; // Declare hitsNeeded variable
 
 export function IceBreak({ onComplete, color, cardText }: IceBreakProps) {
+  const [hitsNeeded] = useState(() => Math.floor(Math.random() * 5) + 2) // 2-6
   const [hits, setHits] = useState(0)
   const [cracks, setCracks] = useState<Crack[]>([])
   const [shards, setShards] = useState<Shard[]>([])
@@ -54,7 +55,7 @@ export function IceBreak({ onComplete, color, cardText }: IceBreakProps) {
     }))
     setCracks((prev) => [...prev, ...newCracks])
 
-    if (newHits >= HITS_NEEDED) {
+    if (newHits >= hitsNeeded) {
       setShattered(true)
       // Generate shards flying outward
       const newShards: Shard[] = Array.from({ length: 12 }, (_, i) => {
@@ -107,8 +108,8 @@ export function IceBreak({ onComplete, color, cardText }: IceBreakProps) {
     return () => window.removeEventListener("keydown", handleKey)
   }, [hitIce])
 
-  const iceOpacity = Math.max(0, 1 - (hits / HITS_NEEDED) * 0.6)
-  const blurAmount = Math.max(0, 8 - (hits / HITS_NEEDED) * 6)
+  const iceOpacity = Math.max(0, 1 - (hits / hitsNeeded) * 0.6)
+  const blurAmount = Math.max(0, 8 - (hits / hitsNeeded) * 6)
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -121,7 +122,7 @@ export function IceBreak({ onComplete, color, cardText }: IceBreakProps) {
         onClick={hitIce}
         disabled={shattered}
         className={`relative w-full max-w-md cursor-pointer focus:outline-none ${shaking ? "animate-shake" : ""}`}
-        aria-label={`Break the ice. ${HITS_NEEDED - hits} hits remaining`}
+        aria-label={`Break the ice. ${hitsNeeded - hits} hits remaining`}
       >
         {/* Card underneath */}
         <div className="rounded-2xl border border-border bg-card/80 p-8 text-center md:p-10">
@@ -202,7 +203,7 @@ export function IceBreak({ onComplete, color, cardText }: IceBreakProps) {
       {!shattered && (
         <div className="flex items-center gap-3">
           <div className="flex gap-1">
-            {Array.from({ length: HITS_NEEDED }, (_, i) => (
+            {Array.from({ length: hitsNeeded }, (_, i) => (
               <div
                 key={i}
                 className="h-2 w-4 rounded-sm transition-colors duration-200"
@@ -213,7 +214,7 @@ export function IceBreak({ onComplete, color, cardText }: IceBreakProps) {
             ))}
           </div>
           <span className="font-mono text-[10px] text-muted-foreground">
-            {`[${hits}/${HITS_NEEDED}]`}
+            {`[${hits}/${hitsNeeded}]`}
           </span>
         </div>
       )}

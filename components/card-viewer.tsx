@@ -9,8 +9,11 @@ import { Confetti } from "./confetti"
 import { AsteroidShoot } from "./games/asteroid-shoot"
 import { IceBreak } from "./games/ice-break"
 import { WordGuess } from "./games/word-guess"
+import { DinoRunner } from "./games/dino-runner"
+import { BlockUncover } from "./games/block-uncover"
+import { PacmanChomp } from "./games/pacman-chomp"
 
-type GameType = "asteroid" | "ice" | "word" | "none"
+type GameType = "asteroid" | "ice" | "word" | "dino" | "blocks" | "pacman" | "none"
 type CardPhase = "game" | "revealed"
 
 function seededRandom(seed: number) {
@@ -20,7 +23,7 @@ function seededRandom(seed: number) {
 
 function assignGames(totalCards: number, deckId: string): GameType[] {
   const games: GameType[] = []
-  const gameTypes: GameType[] = ["asteroid", "ice", "word"]
+  const gameTypes: GameType[] = ["asteroid", "ice", "word", "dino", "blocks", "pacman"]
   // Use deck id hash as seed for consistent but varied assignment
   let seed = 0
   for (let i = 0; i < deckId.length; i++) {

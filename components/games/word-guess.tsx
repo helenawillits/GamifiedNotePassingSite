@@ -89,13 +89,19 @@ export function WordGuess({ onComplete, color, cardText }: WordGuessProps) {
       setRevealed(true)
       setTimeout(onComplete, 1200)
     } else {
-      setAttempts((prev) => prev + 1)
+      const newAttempts = attempts + 1
+      setAttempts(newAttempts)
       setWrongShake(true)
       setTimeout(() => setWrongShake(false), 400)
       setGuess("")
       // Give hints after wrong attempts
-      if (attempts >= 1 && hintLevel < 3) {
+      if (newAttempts >= 1 && hintLevel < 3) {
         setHintLevel((prev) => prev + 1)
+      }
+      // Auto-reveal after 5 wrong attempts
+      if (newAttempts >= 5) {
+        setRevealed(true)
+        setTimeout(onComplete, 1200)
       }
     }
   }, [guess, keyword.word, onComplete, attempts, hintLevel])
