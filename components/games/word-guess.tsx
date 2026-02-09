@@ -163,8 +163,13 @@ export function WordGuess({ onComplete, color, cardText }: WordGuessProps) {
             </button>
           </form>
 
-          {/* Hint + skip */}
+          {/* Hint + skip + tries */}
           <div className="flex flex-col items-center gap-2">
+            {attempts > 0 && (
+              <p className="font-mono text-[10px] text-muted-foreground">
+                {`ATTEMPTS: ${attempts}/5 ${attempts >= 4 ? "// FINAL TRY" : ""}`}
+              </p>
+            )}
             {hintLevel > 0 && (
               <p className="font-mono text-xs text-muted-foreground">
                 {`HINT: ${getHint()}`}

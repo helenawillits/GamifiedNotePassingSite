@@ -41,17 +41,36 @@ export function DinoRunner({ onComplete, color }: DinoRunnerProps) {
 
   phaseRef.current = phase
 
+  const doRestart = useCallback(() => {
+    setPhase("waiting")
+    setDinoY(GROUND_Y - DINO_SIZE)
+    dinoYRef.current = GROUND_Y - DINO_SIZE
+    velocityRef.current = 0
+    isJumpingRef.current = false
+    frameRef.current = 0
+    lastObstacleRef.current = 0
+    obstaclesRef.current = []
+    setObstacles([])
+    setElapsed(0)
+    setScore(0)
+    nextIdRef.current = 0
+  }, [])
+
   const jump = useCallback(() => {
     if (phaseRef.current === "waiting") {
       setPhase("running")
       startTimeRef.current = performance.now()
       return
     }
+    if (phaseRef.current === "dead") {
+      doRestart()
+      return
+    }
     if (!isJumpingRef.current && phaseRef.current === "running") {
       velocityRef.current = JUMP_FORCE
       isJumpingRef.current = true
     }
-  }, [])
+  }, [doRestart])
 
   // Game loop
   useEffect(() => {
@@ -147,21 +166,8 @@ export function DinoRunner({ onComplete, color }: DinoRunnerProps) {
     return () => window.removeEventListener("keydown", handleKey)
   }, [jump])
 
-  // Restart on death
-  const restart = useCallback(() => {
-    setPhase("waiting")
-    setDinoY(GROUND_Y - DINO_SIZE)
-    dinoYRef.current = GROUND_Y - DINO_SIZE
-    velocityRef.current = 0
-    isJumpingRef.current = false
-    frameRef.current = 0
-    lastObstacleRef.current = 0
-    obstaclesRef.current = []
-    setObstacles([])
-    setElapsed(0)
-    setScore(0)
-    nextIdRef.current = 0
-  }, [])
+  // Restart alias for external buttons
+  const restart = doRestart
 
   const timeLeft = Math.max(0, GAME_DURATION - elapsed)
 

@@ -32,8 +32,8 @@ function assignGames(totalCards: number, deckId: string): GameType[] {
 
   for (let i = 0; i < totalCards; i++) {
     const r = seededRandom(seed + i * 7)
-    // ~70% chance of a game, ~30% no game (just reveal card)
-    if (r < 0.7) {
+    // ~85% chance of a game, ~15% no game (just reveal card)
+    if (r < 0.85) {
       const gameIndex = Math.floor(seededRandom(seed + i * 13 + 3) * gameTypes.length)
       games.push(gameTypes[gameIndex])
     } else {
@@ -237,6 +237,15 @@ export function CardViewer({ deck }: { deck: CardDeck }) {
             )}
             {currentGame === "word" && (
               <WordGuess onComplete={onGameComplete} color={colorHex} cardText={deck.cards[currentIndex]} />
+            )}
+            {currentGame === "dino" && (
+              <DinoRunner onComplete={onGameComplete} color={colorHex} />
+            )}
+            {currentGame === "blocks" && (
+              <BlockUncover onComplete={onGameComplete} color={colorHex} />
+            )}
+            {currentGame === "pacman" && (
+              <PacmanChomp onComplete={onGameComplete} color={colorHex} />
             )}
           </div>
         ) : (

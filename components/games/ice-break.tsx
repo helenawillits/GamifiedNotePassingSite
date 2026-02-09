@@ -27,8 +27,6 @@ interface IceBreakProps {
   cardText: string
 }
 
-const hitsNeeded = 6; // Declare hitsNeeded variable
-
 export function IceBreak({ onComplete, color, cardText }: IceBreakProps) {
   const [hitsNeeded] = useState(() => Math.floor(Math.random() * 5) + 2) // 2-6
   const [hits, setHits] = useState(0)
