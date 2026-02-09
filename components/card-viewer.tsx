@@ -1,32 +1,76 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useMemo } from "react"
 import { ArrowLeft, ChevronRight, RotateCcw, Home } from "lucide-react"
 import Link from "next/link"
 import type { CardDeck } from "@/lib/types"
 import { getEmoji, getColorClasses } from "@/lib/decks"
 import { Confetti } from "./confetti"
+import { AsteroidShoot } from "./games/asteroid-shoot"
+import { IceBreak } from "./games/ice-break"
+import { WordGuess } from "./games/word-guess"
+
+type GameType = "asteroid" | "ice" | "word" | "none"
+type CardPhase = "game" | "revealed"
+
+function seededRandom(seed: number) {
+  const x = Math.sin(seed) * 10000
+  return x - Math.floor(x)
+}
+
+function assignGames(totalCards: number, deckId: string): GameType[] {
+  const games: GameType[] = []
+  const gameTypes: GameType[] = ["asteroid", "ice", "word"]
+  // Use deck id hash as seed for consistent but varied assignment
+  let seed = 0
+  for (let i = 0; i < deckId.length; i++) {
+    seed += deckId.charCodeAt(i)
+  }
+
+  for (let i = 0; i < totalCards; i++) {
+    const r = seededRandom(seed + i * 7)
+    // ~70% chance of a game, ~30% no game (just reveal card)
+    if (r < 0.7) {
+      const gameIndex = Math.floor(seededRandom(seed + i * 13 + 3) * gameTypes.length)
+      games.push(gameTypes[gameIndex])
+    } else {
+      games.push("none")
+    }
+  }
+  return games
+}
 
 export function CardViewer({ deck }: { deck: CardDeck }) {
   const [currentIndex, setCurrentIndex] = useState(-1)
-  const [isAnimating, setIsAnimating] = useState(false)
+  const [cardPhase, setCardPhase] = useState<CardPhase>("game")
   const [showConfetti, setShowConfetti] = useState(false)
   const colors = getColorClasses(deck.color)
   const totalCards = deck.cards.length
   const isFinished = currentIndex >= totalCards
   const isIntro = currentIndex === -1
 
-  const next = useCallback(() => {
-    if (isAnimating) return
-    setIsAnimating(true)
-    setCurrentIndex((prev) => prev + 1)
-    setTimeout(() => setIsAnimating(false), 500)
-  }, [isAnimating])
+  const gameAssignments = useMemo(() => assignGames(totalCards, deck.id), [totalCards, deck.id])
+
+  const startNextCard = useCallback(() => {
+    setCurrentIndex((prev) => {
+      const nextIdx = prev + 1
+      return nextIdx
+    })
+    setCardPhase("game")
+  }, [])
+
+  const onGameComplete = useCallback(() => {
+    setCardPhase("revealed")
+  }, [])
+
+  const goToNext = useCallback(() => {
+    startNextCard()
+  }, [startNextCard])
 
   const restart = useCallback(() => {
     setShowConfetti(false)
     setCurrentIndex(-1)
-    setIsAnimating(false)
+    setCardPhase("game")
   }, [])
 
   useEffect(() => {
@@ -35,22 +79,49 @@ export function CardViewer({ deck }: { deck: CardDeck }) {
     }
   }, [isFinished])
 
+  // If current card has no game, auto-reveal
+  useEffect(() => {
+    if (!isIntro && !isFinished && currentIndex >= 0 && gameAssignments[currentIndex] === "none") {
+      setCardPhase("revealed")
+    }
+  }, [currentIndex, gameAssignments, isIntro, isFinished])
+
+  // Keyboard: only handle navigation when card is revealed or on intro/finished screens
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") {
-        e.preventDefault()
-        if (isFinished) {
+      if (cardPhase === "revealed" && !isFinished) {
+        if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") {
+          e.preventDefault()
+          goToNext()
+        }
+      } else if (isIntro) {
+        if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") {
+          e.preventDefault()
+          startNextCard()
+        }
+      } else if (isFinished) {
+        if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") {
+          e.preventDefault()
           restart()
-        } else {
-          next()
         }
       }
     }
     window.addEventListener("keydown", handleKey)
     return () => window.removeEventListener("keydown", handleKey)
-  }, [next, restart, isFinished])
+  }, [cardPhase, isFinished, isIntro, goToNext, startNextCard, restart])
 
   const progress = isIntro ? 0 : Math.min(((currentIndex + 1) / totalCards) * 100, 100)
+  const currentGame = currentIndex >= 0 && currentIndex < totalCards ? gameAssignments[currentIndex] : "none"
+
+  // Color hex for game components
+  const colorHexMap: Record<string, string> = {
+    cyan: "hsl(187, 100%, 50%)",
+    purple: "hsl(270, 80%, 65%)",
+    green: "hsl(150, 60%, 50%)",
+    orange: "hsl(30, 90%, 55%)",
+    pink: "hsl(340, 75%, 55%)",
+  }
+  const colorHex = colorHexMap[deck.color]
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -99,7 +170,7 @@ export function CardViewer({ deck }: { deck: CardDeck }) {
             </p>
             <button
               type="button"
-              onClick={next}
+              onClick={startNextCard}
               className={`hud-border mt-4 flex items-center gap-3 rounded-2xl ${colors.bg} px-8 py-4 text-lg font-bold text-background transition-all hover:scale-105 ${colors.glow}`}
             >
               <span className="font-mono text-xs opacity-70">{">"}</span>
@@ -142,37 +213,71 @@ export function CardViewer({ deck }: { deck: CardDeck }) {
               </Link>
             </div>
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={next}
-            className="relative z-10 w-full max-w-xl cursor-pointer focus:outline-none"
-            disabled={isAnimating}
-          >
-            <div
-              key={currentIndex}
-              className={`animate-slide-up-fade flex flex-col items-center gap-6 rounded-2xl border ${colors.border} bg-card/80 p-8 text-center backdrop-blur-sm transition-all md:p-12 ${colors.glow}`}
-            >
-              {/* Node header */}
-              <div className="flex w-full items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {`NODE_${String(currentIndex + 1).padStart(2, "0")}`}
-                </span>
-                <span className={`font-mono text-[10px] ${colors.text}`}>
-                  {`[${currentIndex + 1}/${totalCards}]`}
-                </span>
-              </div>
-
-              <p className="text-xl font-semibold leading-relaxed text-foreground md:text-2xl text-balance">
-                {deck.cards[currentIndex]}
-              </p>
-
-              <div className="flex items-center gap-2 pt-2 font-mono text-[10px] text-muted-foreground">
-                <span>{"TAP_FOR_NEXT"}</span>
-                <ChevronRight className="h-3 w-3" />
-              </div>
+        ) : cardPhase === "game" && currentGame !== "none" ? (
+          /* Mini-game gate */
+          <div key={`game-${currentIndex}`} className="relative z-10 flex w-full max-w-xl flex-col items-center">
+            {/* Node indicator */}
+            <div className="mb-6 flex items-center gap-3">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                {`NODE_${String(currentIndex + 1).padStart(2, "0")}`}
+              </span>
+              <span className={`font-mono text-[10px] ${colors.text}`}>
+                {`[${currentIndex + 1}/${totalCards}]`}
+              </span>
             </div>
-          </button>
+
+            {currentGame === "asteroid" && (
+              <AsteroidShoot onComplete={onGameComplete} color={colorHex} />
+            )}
+            {currentGame === "ice" && (
+              <IceBreak onComplete={onGameComplete} color={colorHex} cardText={deck.cards[currentIndex]} />
+            )}
+            {currentGame === "word" && (
+              <WordGuess onComplete={onGameComplete} color={colorHex} cardText={deck.cards[currentIndex]} />
+            )}
+          </div>
+        ) : (
+          /* Revealed card */
+          <div key={`card-${currentIndex}`} className="relative z-10 w-full max-w-xl">
+            <div className="animate-slide-up-fade flex flex-col items-center gap-6">
+              <div
+                className={`w-full rounded-2xl border ${colors.border} bg-card/80 p-8 text-center backdrop-blur-sm md:p-12 ${colors.glow}`}
+              >
+                {/* Node header */}
+                <div className="mb-6 flex w-full items-center justify-between">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {`NODE_${String(currentIndex + 1).padStart(2, "0")}`}
+                  </span>
+                  <span className={`font-mono text-[10px] ${colors.text}`}>
+                    {currentGame !== "none" ? "[DECRYPTED]" : `[${currentIndex + 1}/${totalCards}]`}
+                  </span>
+                </div>
+
+                <p className="text-xl font-semibold leading-relaxed text-foreground md:text-2xl text-balance">
+                  {deck.cards[currentIndex]}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={goToNext}
+                className={`flex items-center gap-2 rounded-xl ${colors.bg} px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-background transition-all hover:scale-105`}
+              >
+                {currentIndex + 1 < totalCards ? (
+                  <>
+                    NEXT_NODE
+                    <ChevronRight className="h-3 w-3" />
+                  </>
+                ) : (
+                  "COMPLETE_MISSION"
+                )}
+              </button>
+
+              <p className="font-mono text-[10px] text-muted-foreground">
+                {"SPACEBAR // ENTER"}
+              </p>
+            </div>
+          </div>
         )}
       </main>
     </div>
