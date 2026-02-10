@@ -6,6 +6,7 @@ import Link from "next/link"
 import type { CardDeck } from "@/lib/types"
 import { getEmoji, getColorClasses } from "@/lib/decks"
 import { Confetti } from "./confetti"
+import { TypewriterText } from "./typewriter-text"
 import { AsteroidShoot } from "./games/asteroid-shoot"
 import { IceBreak } from "./games/ice-break"
 import { WordGuess } from "./games/word-guess"
@@ -286,8 +287,8 @@ export function CardViewer({ deck }: { deck: CardDeck }) {
                   </span>
                 </div>
 
-                <p className="text-xl font-semibold leading-relaxed text-foreground md:text-2xl text-balance">
-                  {deck.cards[currentIndex]}
+                <p className="text-left text-xl font-semibold leading-relaxed text-foreground md:text-2xl">
+                  <TypewriterText text={deck.cards[currentIndex]} speed={30} />
                 </p>
               </div>
 
